@@ -17,13 +17,15 @@ enum Camera_Movement {
 	LEFT,
 	RIGHT,
 	UP,
-	DOWN
+	DOWN,
+	ROTATELEFT,
+	ROTATERIGHT
 };
 
 // Default camera values
 const GLfloat YAW = -90.0f;
 const GLfloat PITCH = 0.0f;
-const GLfloat SPEED = 3.0f;
+const GLfloat SPEED = 6.0f;
 const GLfloat SENSITIVTY = 0.25f;
 const GLfloat ZOOM = 45.0f;
 
@@ -87,6 +89,28 @@ public:
 			this->Position += this->Up * velocity;
 		if (direction == DOWN)
 			this->Position -= this->Up * velocity;
+		if (direction == ROTATELEFT)
+		{
+			this->Yaw -= 0.1f;
+			glm::vec3 front;
+			front.x = cos(glm::radians(this->Yaw));
+			front.z = sin(glm::radians(this->Yaw));
+			this->Front = glm::normalize(front);
+			// Also re-calculate the Right and Up vector
+			this->Right = glm::normalize(glm::cross(this->Front, this->WorldUp));
+			//this->Position -= this->Front * Yaw;
+
+		}
+		if (direction == ROTATERIGHT) {
+			this->Yaw += 0.1f;
+			glm::vec3 front;
+			front.x = cos(glm::radians(this->Yaw));
+			front.z = sin(glm::radians(this->Yaw));
+			this->Front = glm::normalize(front);
+			// Also re-calculate the Right and Up vector
+			this->Right = glm::normalize(glm::cross(this->Front, this->WorldUp));
+			//this->Position -= this->Front * Yaw;
+		}
 	}
 
 	// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.

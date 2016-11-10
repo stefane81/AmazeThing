@@ -35,7 +35,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="vbo.cpp" />
     <ClCompile Include="VertexData.cpp" />
     <ClCompile Include="VertexObject.cpp" />
   </ItemGroup>

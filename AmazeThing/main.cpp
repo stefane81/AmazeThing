@@ -22,7 +22,7 @@
 #include "VertexData.h"
 
 
-void shader(Shader & lightingShader, Shader & lampShader, GLuint & containerVAO, GLuint & lightVAO);
+void shader(VertexData &vd, Shader & lightingShader, Shader & lampShader, GLuint & containerVAO, GLuint & lightVAO);
 
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -96,7 +96,7 @@ int main()
 	glGenBuffers(1, &VBO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() *sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
 
 	glBindVertexArray(containerVAO);
 	// Position attribute
@@ -135,7 +135,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// call shader
-		shader(lightingShader, lampShader, containerVAO, lightVAO);
+		shader(vd, lightingShader, lampShader, containerVAO, lightVAO);
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
@@ -146,7 +146,7 @@ int main()
 	return 0;
 }
 
-void shader(Shader &lightingShader, Shader &lampShader,GLuint &containerVAO, GLuint &lightVAO) {
+void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &containerVAO, GLuint &lightVAO) {
 
 	// Use cooresponding shader when setting uniforms/drawing objects
 	lightingShader.Use();
@@ -157,8 +157,9 @@ void shader(Shader &lightingShader, Shader &lampShader,GLuint &containerVAO, GLu
 	GLfloat camX = sin(glfwGetTime()) * radius;
 	GLfloat camZ = cos(glfwGetTime()) * radius;
 	glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
-	glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
-	glUniform3f(lightPosLoc, lightPos.x+camX, lightPos.y, lightPos.z+camZ);
+	glUniform3f(lightColorLoc, 1.0f, 0.5f, 1.0f);
+	//glUniform3f(lightPosLoc, lightPos.x + camX, lightPos.y, lightPos.z + camZ);
+	glUniform3f(lightPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
 	//glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 
 	// Create camera transformations
@@ -179,9 +180,26 @@ void shader(Shader &lightingShader, Shader &lampShader,GLuint &containerVAO, GLu
 	// Draw the container (using container's vertex attributes)
 	glBindVertexArray(containerVAO);
 	glm::mat4 model;
+	//model = glm::translate(model, glm::vec3(0.5f, 0.5f, 0.0f));
+	//model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f));
+	model = glm::translate(model, glm::vec3(-1, 0, 0));
+	//model = glm::rotate(model, 90.0f, glm::vec3(0.1f, 0.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
-	glBindVertexArray(0);
+	for (auto line : vd.getMap()) {
+		for (auto column : line) {
+			if (column == 1) {
+				model = glm::translate(model, glm::vec3(-1, 0, 0));
+				glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			else {
+				model = glm::translate(model, glm::vec3(-1, 0, 0));
+			}
+		}
+		model = glm::translate(model, glm::vec3(line.size(), 0, -1));
+	}
+
 
 	// Also draw the lamp object, again binding the appropriate shader
 	lampShader.Use();
@@ -194,7 +212,7 @@ void shader(Shader &lightingShader, Shader &lampShader,GLuint &containerVAO, GLu
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 	model = glm::mat4();
-	model = glm::translate(model, glm::vec3(lightPos.x+camX, lightPos.y,lightPos.z+camZ));
+	model = glm::translate(model, glm::vec3(lightPos.x + camX, lightPos.y, lightPos.z + camZ));
 	model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	// Draw the light object (using light's vertex attributes)
@@ -229,9 +247,13 @@ void do_movement()
 	if (keys[GLFW_KEY_D])
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 	if (keys[GLFW_KEY_Q])
-		camera.ProcessKeyboard(UP, deltaTime);
-	if (keys[GLFW_KEY_E])
 		camera.ProcessKeyboard(DOWN, deltaTime);
+	if (keys[GLFW_KEY_E])
+		camera.ProcessKeyboard(UP, deltaTime);
+	if (keys[GLFW_KEY_LEFT])
+		camera.ProcessKeyboard(ROTATELEFT, deltaTime);
+	if (keys[GLFW_KEY_RIGHT])
+		camera.ProcessKeyboard(ROTATERIGHT, deltaTime);
 }
 
 bool firstMouse = true;
