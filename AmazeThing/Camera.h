@@ -91,7 +91,7 @@ public:
 			this->Position -= this->Up * velocity;
 		if (direction == ROTATELEFT)
 		{
-			this->Yaw -= 0.1f;
+			this->Yaw -= 0.25f;
 			glm::vec3 front;
 			front.x = cos(glm::radians(this->Yaw));
 			front.z = sin(glm::radians(this->Yaw));
@@ -102,7 +102,7 @@ public:
 
 		}
 		if (direction == ROTATERIGHT) {
-			this->Yaw += 0.1f;
+			this->Yaw += 0.25f;
 			glm::vec3 front;
 			front.x = cos(glm::radians(this->Yaw));
 			front.z = sin(glm::radians(this->Yaw));

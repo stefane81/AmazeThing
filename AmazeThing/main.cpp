@@ -31,7 +31,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void do_movement();
 
 // Window dimensions
-const GLuint WIDTH = 800, HEIGHT = 600;
+const GLuint WIDTH = 1680, HEIGHT = 1200;
 
 // Camera
 Camera  camera(glm::vec3(0.0f, 0.0f, 4.0f));
@@ -40,7 +40,9 @@ GLfloat lastY = HEIGHT / 2.0;
 bool    keys[1024];
 
 // Light attributes
-glm::vec3 lightPos(-0.5f, 0.0f, 1.0f);
+glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+GLfloat pathPri = 0.0f;
+GLboolean reversed = false;
 
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
@@ -153,13 +155,29 @@ void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &
 	GLint objectColorLoc = glGetUniformLocation(lightingShader.Program, "objectColor");
 	GLint lightColorLoc = glGetUniformLocation(lightingShader.Program, "lightColor");
 	GLint lightPosLoc = glGetUniformLocation(lightingShader.Program, "lightPos");
+
 	GLfloat radius = 2.0f;
 	GLfloat camX = sin(glfwGetTime()) * radius;
 	GLfloat camZ = cos(glfwGetTime()) * radius;
+	
+
+	// I AM RETARDED
+	if (reversed) {
+		pathPri -= 0.005f;
+	}
+	else {
+		pathPri += 0.005f;
+	}
+	if (pathPri < -9.5f) {
+		reversed = false;
+	} else if (pathPri > 2.0f){
+		reversed = true;
+	}
+
 	glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
-	glUniform3f(lightColorLoc, 1.0f, 0.5f, 1.0f);
-	//glUniform3f(lightPosLoc, lightPos.x + camX, lightPos.y, lightPos.z + camZ);
-	glUniform3f(lightPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
+	glUniform3f(lightColorLoc, camX, 0.5f, camZ);
+	glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z + pathPri);
+	//glUniform3f(lightPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
 	//glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 
 	// Create camera transformations
@@ -182,7 +200,7 @@ void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &
 	glm::mat4 model;
 	//model = glm::translate(model, glm::vec3(0.5f, 0.5f, 0.0f));
 	//model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f));
-	model = glm::translate(model, glm::vec3(-1, 0, 0));
+	model = glm::translate(model, glm::vec3(5, 0, 0));
 	//model = glm::rotate(model, 90.0f, glm::vec3(0.1f, 0.0f, 0.0f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -208,11 +226,15 @@ void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &
 	viewLoc = glGetUniformLocation(lampShader.Program, "view");
 	projLoc = glGetUniformLocation(lampShader.Program, "projection");
 
+
+	
 	// Set matrices
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 	model = glm::mat4();
-	model = glm::translate(model, glm::vec3(lightPos.x + camX, lightPos.y, lightPos.z + camZ));
+	
+	model = glm::translate(model, glm::vec3(lightPos.x, lightPos.y, lightPos.z + pathPri));
+
 	model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	// Draw the light object (using light's vertex attributes)

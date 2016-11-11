@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Collision.h" />
     <ClInclude Include="GLFW.h" />
     <ClInclude Include="GLM.h" />
     <ClInclude Include="main.h" />
@@ -30,6 +31,7 @@
     <ClInclude Include="VertexObject.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Collision.cpp" />
     <ClCompile Include="GLFW.cpp" />
     <ClCompile Include="GLM.cpp" />
     <ClCompile Include="main.cpp" />
