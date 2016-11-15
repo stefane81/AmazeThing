@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <map>
 
 // GLEW
 #define GLEW_STATIC
@@ -20,18 +21,19 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "VertexData.h"
+#include "Collision.h"
 
 
-void shader(VertexData &vd, Shader & lightingShader, Shader & lampShader, GLuint & containerVAO, GLuint & lightVAO);
+void shader(VertexData &vd, Shader & lightingShader, Shader & lampShader, GLuint & containerVAO, GLuint & lightVAO, std::map<int, std::map<int, glm::mat4>> &mModel);
 
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void do_movement();
+void do_movement(GLboolean collision);
 
 // Window dimensions
-const GLuint WIDTH = 1680, HEIGHT = 1200;
+const GLuint WIDTH = 640, HEIGHT = 480;
 
 // Camera
 Camera  camera(glm::vec3(0.0f, 0.0f, 4.0f));
@@ -51,6 +53,15 @@ GLfloat lastFrame = 0.0f;  	// Time of last frame
 							// The MAIN function, from here we start the application and run the game loop
 int main()
 {
+	VertexData vd;
+	std::vector<GLfloat> vertices;
+	GLuint VBO, containerVAO, lightVAO;
+	Collision col;
+
+	// Store models for collision detection
+	vector<glm::mat4> vModel;
+	vector<vector<int>> vModelXZ;
+	std::map<int, std::map<int, glm::mat4>> mModel;
 	// Init GLFW
 	glfwInit();
 	// Set all the required options for GLFW
@@ -62,6 +73,7 @@ int main()
 	// Create a GLFWwindow object that we can use for GLFW's functions
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
+	glfwSetWindowPos(window, 1000, 60);
 
 	// Set the required callback functions
 	glfwSetKeyCallback(window, key_callback);
@@ -87,12 +99,10 @@ int main()
 	Shader lightingShader("lighting.vs", "lighting.frag");
 	Shader lampShader("lamp.vs", "lamp.frag");
 
-	VertexData vd;
-	std::vector<GLfloat> vertices;
+	
 	vertices = vd.getVertexData();
 
 	// First, set the container's VAO (and VBO)
-	GLuint VBO, containerVAO, lightVAO;
 
 	glGenVertexArrays(1, &containerVAO);
 	glGenBuffers(1, &VBO);
@@ -119,6 +129,7 @@ int main()
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
 
+	
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
@@ -130,14 +141,17 @@ int main()
 
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
-		do_movement();
 
 		// Clear the colorbuffer
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// call shader
-		shader(vd, lightingShader, lampShader, containerVAO, lightVAO);
+		shader(vd, lightingShader, lampShader, containerVAO, lightVAO, mModel);
+
+		// collision detection
+		GLboolean collision = col.checkCollision(mModel, camera.Position);
+		do_movement(collision);
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
@@ -148,7 +162,7 @@ int main()
 	return 0;
 }
 
-void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &containerVAO, GLuint &lightVAO) {
+void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &containerVAO, GLuint &lightVAO, std::map<int, std::map<int,glm::mat4>> &mModel) {
 
 	// Use cooresponding shader when setting uniforms/drawing objects
 	lightingShader.Use();
@@ -159,7 +173,7 @@ void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &
 	GLfloat radius = 2.0f;
 	GLfloat camX = sin(glfwGetTime()) * radius;
 	GLfloat camZ = cos(glfwGetTime()) * radius;
-	
+
 
 	// I AM RETARDED
 	if (reversed) {
@@ -170,7 +184,8 @@ void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &
 	}
 	if (pathPri < -9.5f) {
 		reversed = false;
-	} else if (pathPri > 2.0f){
+	}
+	else if (pathPri > 2.0f) {
 		reversed = true;
 	}
 
@@ -202,14 +217,18 @@ void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &
 	//model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f));
 	model = glm::translate(model, glm::vec3(5, 0, 0));
 	//model = glm::rotate(model, 90.0f, glm::vec3(0.1f, 0.0f, 0.0f));
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+
 	for (auto line : vd.getMap()) {
 		for (auto column : line) {
 			if (column == 1) {
 				model = glm::translate(model, glm::vec3(-1, 0, 0));
 				glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 				glDrawArrays(GL_TRIANGLES, 0, 36);
+				//std::cout << "x: " << model[0].x << " y: " << model[0].y << " z: " << model[0].z << std::endl;
+				mModel[(int)model[3].x][(int)model[3].z] = model;
+				//vModel.push_back(model);
+				
+
 			}
 			else {
 				model = glm::translate(model, glm::vec3(-1, 0, 0));
@@ -227,12 +246,12 @@ void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &
 	projLoc = glGetUniformLocation(lampShader.Program, "projection");
 
 
-	
+
 	// Set matrices
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 	model = glm::mat4();
-	
+
 	model = glm::translate(model, glm::vec3(lightPos.x, lightPos.y, lightPos.z + pathPri));
 
 	model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
@@ -257,25 +276,44 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 }
 
-void do_movement()
+GLchar keyChar;
+void do_movement(GLboolean collision)
 {
+
 	// Camera controls
-	if (keys[GLFW_KEY_W])
-		camera.ProcessKeyboard(FORWARD, deltaTime);
-	if (keys[GLFW_KEY_S])
+	if (keys[GLFW_KEY_W]) {
+		if (!collision ) {
+			camera.ProcessKeyboard(FORWARD, deltaTime);
+		}
+		keyChar = 'W';
+	}
+	if (keys[GLFW_KEY_S]) {
 		camera.ProcessKeyboard(BACKWARD, deltaTime);
-	if (keys[GLFW_KEY_A])
+		keyChar = 'S';
+	}
+	if (keys[GLFW_KEY_A]) {
 		camera.ProcessKeyboard(LEFT, deltaTime);
-	if (keys[GLFW_KEY_D])
+		keyChar = 'A';
+	}
+	if (keys[GLFW_KEY_D]) {
 		camera.ProcessKeyboard(RIGHT, deltaTime);
-	if (keys[GLFW_KEY_Q])
+		keyChar = 'D';
+	}
+	if (keys[GLFW_KEY_Q]) {
 		camera.ProcessKeyboard(DOWN, deltaTime);
-	if (keys[GLFW_KEY_E])
+
+	}
+	if (keys[GLFW_KEY_E]) {
 		camera.ProcessKeyboard(UP, deltaTime);
-	if (keys[GLFW_KEY_LEFT])
+
+	}
+	if (keys[GLFW_KEY_LEFT]) {
 		camera.ProcessKeyboard(ROTATELEFT, deltaTime);
-	if (keys[GLFW_KEY_RIGHT])
+	}
+	if (keys[GLFW_KEY_RIGHT]) {
 		camera.ProcessKeyboard(ROTATERIGHT, deltaTime);
+
+	}
 }
 
 bool firstMouse = true;
