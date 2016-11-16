@@ -24,10 +24,11 @@
     <ClInclude Include="GLFW.h" />
     <ClInclude Include="GLM.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="Map.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Shapes.h" />
     <ClInclude Include="Texture.h" />
-    <ClInclude Include="VertexData.h" />
     <ClInclude Include="VertexObject.h" />
   </ItemGroup>
   <ItemGroup>
@@ -35,9 +36,10 @@
     <ClCompile Include="GLFW.cpp" />
     <ClCompile Include="GLM.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Map.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Shapes.cpp" />
     <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="VertexData.cpp" />
     <ClCompile Include="VertexObject.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

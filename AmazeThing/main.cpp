@@ -20,11 +20,12 @@
 // Other includes
 #include "Shader.h"
 #include "Camera.h"
-#include "VertexData.h"
+#include "Shapes.h"
+#include "Map.h"
 #include "Collision.h"
 
 
-void shader(VertexData &vd, Shader & lightingShader, Shader & lampShader, GLuint & containerVAO, GLuint & lightVAO, std::map<int, std::map<int, glm::mat4>> &mModel);
+void shader(Map &map, Shader & lightingShader, Shader & lampShader, GLuint & containerVAO, GLuint & lightVAO, std::map<int, std::map<int, glm::mat4>> &mModel);
 
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -53,14 +54,15 @@ GLfloat lastFrame = 0.0f;  	// Time of last frame
 							// The MAIN function, from here we start the application and run the game loop
 int main()
 {
-	VertexData vd;
+	Shapes shapes;
+	Map map;
 	std::vector<GLfloat> vertices;
 	GLuint VBO, containerVAO, lightVAO;
 	Collision col;
 
 	// Store models for collision detection
-	vector<glm::mat4> vModel;
-	vector<vector<int>> vModelXZ;
+	std::vector<glm::mat4> vModel;
+	std::vector<std::vector<int>> vModelXZ;
 	std::map<int, std::map<int, glm::mat4>> mModel;
 	// Init GLFW
 	glfwInit();
@@ -100,7 +102,7 @@ int main()
 	Shader lampShader("lamp.vs", "lamp.frag");
 
 	
-	vertices = vd.getVertexData();
+	vertices = shapes.getShape("cube");
 
 	// First, set the container's VAO (and VBO)
 
@@ -147,7 +149,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// call shader
-		shader(vd, lightingShader, lampShader, containerVAO, lightVAO, mModel);
+		shader(map, lightingShader, lampShader, containerVAO, lightVAO, mModel);
 
 		// collision detection
 		GLboolean collision = col.checkCollision(mModel, camera.Position);
@@ -162,7 +164,7 @@ int main()
 	return 0;
 }
 
-void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &containerVAO, GLuint &lightVAO, std::map<int, std::map<int,glm::mat4>> &mModel) {
+void shader(Map &map, Shader &lightingShader, Shader &lampShader, GLuint &containerVAO, GLuint &lightVAO, std::map<int, std::map<int,glm::mat4>> &mModel) {
 
 	// Use cooresponding shader when setting uniforms/drawing objects
 	lightingShader.Use();
@@ -218,7 +220,7 @@ void shader(VertexData &vd, Shader &lightingShader, Shader &lampShader, GLuint &
 	model = glm::translate(model, glm::vec3(5, 0, 0));
 	//model = glm::rotate(model, 90.0f, glm::vec3(0.1f, 0.0f, 0.0f));
 
-	for (auto line : vd.getMap()) {
+	for (auto line : map.getMap()) {
 		for (auto column : line) {
 			if (column == 1) {
 				model = glm::translate(model, glm::vec3(-1, 0, 0));
@@ -279,12 +281,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 GLchar keyChar;
 void do_movement(GLboolean collision)
 {
-
+	// Make walls inpassable, do not just hinder camera movement
 	// Camera controls
-	if (keys[GLFW_KEY_W]) {
-		if (!collision ) {
-			camera.ProcessKeyboard(FORWARD, deltaTime);
-		}
+	if (keys[GLFW_KEY_W] && !collision) {
+		camera.ProcessKeyboard(FORWARD, deltaTime);
 		keyChar = 'W';
 	}
 	if (keys[GLFW_KEY_S]) {

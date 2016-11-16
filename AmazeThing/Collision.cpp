@@ -17,6 +17,7 @@ GLboolean Collision::checkCollision(std::map<int, std::map<int, glm::mat4>> &mMo
 			if (mModel[x][z][3].x + size >= camPosition.x && camPosition.x + camSize >= mModel[x][z][3].x
 				&&
 				mModel[x][z][3].z + size >= camPosition.z && camPosition.z + camSize >= mModel[x][z][3].z) {
+				std::cout << "Collision x: " << camPosition.x << " z: " << camPosition.z <<  std::endl;
 				return true;
 			}
 		}
