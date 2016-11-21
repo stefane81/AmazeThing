@@ -102,7 +102,7 @@ int main()
 	Shader lampShader("lamp.vs", "lamp.frag");
 
 	
-	vertices = shapes.getShape("cube");
+	vertices = shapes.getShape(shapes.PLANE);
 
 	// First, set the container's VAO (and VBO)
 

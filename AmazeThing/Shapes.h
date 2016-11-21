@@ -14,10 +14,25 @@ public:
 	Shapes();
 	~Shapes();
 
-	std::vector<GLfloat> getShape(std::string shape);
+	// enum for all shapes availible
+	enum Shape {
+		CUBE,
+		PLANE
+	};
+
+	std::vector<GLfloat> getShape(Shape shape);
 
 private:
 
+	// Shapes start
+	std::vector<GLfloat> plane = {
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	};
 	std::vector<GLfloat> cube = {
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -61,5 +76,7 @@ private:
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
+
+	// Shapes end
 };
 
