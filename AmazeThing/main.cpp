@@ -25,7 +25,7 @@
 #include "Collision.h"
 
 
-void shader(Map &map, Shader & lightingShader, Shader & lampShader, GLuint & containerVAO, GLuint & lightVAO, std::map<int, std::map<int, glm::mat4>> &mModel);
+void shader(Map &map, Shader & lightingShader, Shader & lampShader, GLuint & containerVAO, GLuint & lightVAO, std::map<int, std::map<int, glm::vec3>> &mModel);
 
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -63,7 +63,7 @@ int main()
 	// Store models for collision detection
 	std::vector<glm::mat4> vModel;
 	std::vector<std::vector<int>> vModelXZ;
-	std::map<int, std::map<int, glm::mat4>> mModel;
+	std::map<int, std::map<int, glm::vec3>> mModel;
 	// Init GLFW
 	glfwInit();
 	// Set all the required options for GLFW
@@ -79,7 +79,7 @@ int main()
 
 	// Set the required callback functions
 	glfwSetKeyCallback(window, key_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
+	//glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 
 	// GLFW Options
@@ -102,7 +102,7 @@ int main()
 	Shader lampShader("lamp.vs", "lamp.frag");
 
 	
-	vertices = shapes.getShape(shapes.PLANE);
+	vertices = shapes.getShape(shapes.CUBE);
 
 	// First, set the container's VAO (and VBO)
 
@@ -131,6 +131,12 @@ int main()
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
 
+
+	// Draw wireframe
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	// Switch back to full cubes
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
 
 	// Game loop
@@ -164,7 +170,7 @@ int main()
 	return 0;
 }
 
-void shader(Map &map, Shader &lightingShader, Shader &lampShader, GLuint &containerVAO, GLuint &lightVAO, std::map<int, std::map<int,glm::mat4>> &mModel) {
+void shader(Map &map, Shader &lightingShader, Shader &lampShader, GLuint &containerVAO, GLuint &lightVAO, std::map<int, std::map<int,glm::vec3>> &mModel) {
 
 	// Use cooresponding shader when setting uniforms/drawing objects
 	lightingShader.Use();
@@ -192,10 +198,9 @@ void shader(Map &map, Shader &lightingShader, Shader &lampShader, GLuint &contai
 	}
 
 	glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
-	glUniform3f(lightColorLoc, camX, 0.5f, camZ);
-	glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z + pathPri);
-	//glUniform3f(lightPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
-	//glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+	//glUniform3f(lightColorLoc, camX, 0.5f, camZ);
+	glUniform3f(lightColorLoc, 0.5f, 0.5f, 1.5f);
+	glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z+1.0f); //+ pathPri);
 
 	// Create camera transformations
 	glm::mat4 view;
@@ -224,10 +229,12 @@ void shader(Map &map, Shader &lightingShader, Shader &lampShader, GLuint &contai
 		for (auto column : line) {
 			if (column == 1) {
 				model = glm::translate(model, glm::vec3(-1, 0, 0));
+				model = glm::rotate(model, 90.0f, glm::vec3(1.0, 0.0, 0.0));
+				model = glm::translate(model, glm::vec3(0, 0, 0));
 				glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 				//std::cout << "x: " << model[0].x << " y: " << model[0].y << " z: " << model[0].z << std::endl;
-				mModel[(int)model[3].x][(int)model[3].z] = model;
+				mModel[(int)model[3].x][(int)model[3].z] = model[3];
 				//vModel.push_back(model);
 				
 
@@ -254,7 +261,7 @@ void shader(Map &map, Shader &lightingShader, Shader &lampShader, GLuint &contai
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 	model = glm::mat4();
 
-	model = glm::translate(model, glm::vec3(lightPos.x, lightPos.y, lightPos.z + pathPri));
+	model = glm::translate(model, glm::vec3(lightPos.x, lightPos.y, lightPos.z));// +pathPri));
 
 	model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));

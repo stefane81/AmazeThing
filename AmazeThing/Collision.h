@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <map>
+#include <math.h>
 #include <GL/glew.h>
 
 // GLM Mathematics
@@ -12,6 +13,6 @@ class Collision
 public:
 	Collision();
 	~Collision();
-	GLboolean checkCollision(std::map<int, std::map<int, glm::mat4>> &mModel, glm::vec3 camPosition);
+	GLboolean checkCollision(std::map<int, std::map<int, glm::vec3>> &mModel, glm::vec3 camPosition);
 };
 
